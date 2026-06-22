@@ -5,7 +5,7 @@
 
 </head>
 <body>
-  <h1>Game Analysis App</h1>
+  <h1>lol Game Analysis App</h1>
 
   <p>
     This project is a League of Legends match record analysis tool
