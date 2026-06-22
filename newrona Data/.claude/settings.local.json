@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\sang\\\\Documents\\\\GitHub\\\\newrona Data\\\\newrona Data\" -Force | Select-Object Name; \"DOTNET:\"; \\(Get-Command dotnet -ErrorAction SilentlyContinue\\).Source)",
+      "PowerShell(dotnet build *)",
+      "Bash(dotnet sln *)",
+      "Bash(dotnet build *)"
+    ]
+  }
+}

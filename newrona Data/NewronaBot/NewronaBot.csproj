@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>NewronaBot</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Discord.Net" Version="3.17.4" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
+  </ItemGroup>
+
+  <!-- 기존 WPF 프로젝트의 도메인/서비스 계층을 복제 없이 공유(링크).
+       이 파일들은 WPF 의존성이 전혀 없어 콘솔 봇에서 그대로 재사용 가능. -->
+  <ItemGroup>
+    <Compile Include="..\WpfApp1\Models\Player.cs"        Link="Shared\Models\Player.cs" />
+    <Compile Include="..\WpfApp1\Models\Match.cs"         Link="Shared\Models\Match.cs" />
+    <Compile Include="..\WpfApp1\Models\ServerRank.cs"    Link="Shared\Models\ServerRank.cs" />
+    <Compile Include="..\WpfApp1\Data\IPlayerRepository.cs" Link="Shared\Data\IPlayerRepository.cs" />
+    <Compile Include="..\WpfApp1\Data\IMatchRepository.cs"  Link="Shared\Data\IMatchRepository.cs" />
+    <Compile Include="..\WpfApp1\Services\IPlayerService.cs"   Link="Shared\Services\IPlayerService.cs" />
+    <Compile Include="..\WpfApp1\Services\PlayerService.cs"    Link="Shared\Services\PlayerService.cs" />
+    <Compile Include="..\WpfApp1\Services\IMatchService.cs"    Link="Shared\Services\IMatchService.cs" />
+    <Compile Include="..\WpfApp1\Services\MatchService.cs"     Link="Shared\Services\MatchService.cs" />
+    <Compile Include="..\WpfApp1\Services\IRankService.cs"     Link="Shared\Services\IRankService.cs" />
+    <Compile Include="..\WpfApp1\Services\RankService.cs"      Link="Shared\Services\RankService.cs" />
+    <Compile Include="..\WpfApp1\Services\IScoringStrategy.cs" Link="Shared\Services\IScoringStrategy.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="botconfig.example.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="botconfig.json" CopyToOutputDirectory="PreserveNewest" Condition="Exists('botconfig.json')" />
+  </ItemGroup>
+
+</Project>
