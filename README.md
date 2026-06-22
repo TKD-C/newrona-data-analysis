@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Game Analysis App</title>
+
 </head>
 <body>
   <h1>Game Analysis App</h1>
