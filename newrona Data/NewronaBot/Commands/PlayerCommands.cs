@@ -106,16 +106,15 @@ public sealed class PlayerCommands : InteractionModuleBase<SocketInteractionCont
         var players = _players.GetPlayers();
         if (players.Count == 0)
         {
-            await RespondAsync("등록된 내전러가 없습니다. `/내전러추가` 로 등록하세요.");
+            await RespondAsync("등록된 내전러가 없습니다. `/내전러추가` 로 등록하세요.", ephemeral: true);
             return;
         }
 
         var lines = players.Select(p =>
         {
             var rank = _rank.Resolve(p.Score).Name;
-            var nick = string.IsNullOrWhiteSpace(p.LolNickname) ? "" : $" ({p.LolNickname})";
-            var lanes = LanesText(p);
-            return $"**{p.Name}**{nick} · 점수 {p.Score} · {rank}{lanes} · {p.Wins}승 {p.Losses}패 ({p.WinRate:P0})";
+            var main = p.MainLanes.Count > 0 ? p.MainLanesText : "없음";
+            return $"**{p.Name}** · 점수 {p.Score} · {rank} · {main} · {p.Wins}승 {p.Losses}패 ({p.WinRate:P0})";
         });
 
         var embed = new EmbedBuilder()
@@ -123,7 +122,37 @@ public sealed class PlayerCommands : InteractionModuleBase<SocketInteractionCont
             .WithDescription(string.Join("\n", lines))
             .WithColor(Color.Blue)
             .Build();
-        await RespondAsync(embed: embed);
+        await RespondAsync(embed: embed, ephemeral: true);
+    }
+
+    [SlashCommand("내전러정보", "내전러 한 명의 현재 정보를 봅니다(이름으로 찾음, 본인에게만 표시).")]
+    public async Task Info([Summary("이름", "조회할 내전러 이름")] string 이름)
+    {
+        var player = Find(이름);
+        if (player is null)
+        {
+            await RespondAsync($"⚠️ '{이름}' 내전러를 찾을 수 없습니다.", ephemeral: true);
+            return;
+        }
+
+        var nick = string.IsNullOrWhiteSpace(player.LolNickname) ? "" : $" ({player.LolNickname})";
+        var rank = _rank.Resolve(player.Score).Name;
+        var main = player.MainLanes.Count > 0 ? player.MainLanesText : "없음";
+        var sub = player.SubLanes.Count > 0 ? player.SubLanesText : "없음";
+
+        var embed = new EmbedBuilder()
+            .WithTitle($":ninja: {player.Name}{nick}")
+            .WithDescription(string.Join("\n", new[]
+            {
+                $"점수(mmr) : {player.Score}:fleur_de_lis:",
+                $"등급 : {rank}",
+                $"주 라인 : {main}",
+                $"부 라인 : {sub}",
+                $":adhesive_bandage:×{player.Bandage}",
+            }))
+            .WithColor(Color.Gold)
+            .Build();
+        await RespondAsync(embed: embed, ephemeral: true);
     }
 
     [RequireRole("내전관리자")]
@@ -206,6 +235,43 @@ public sealed class PlayerCommands : InteractionModuleBase<SocketInteractionCont
     }
 
     [RequireRole("내전관리자")]
+    [SlashCommand("내전러puuid연결", "[내전관리자] 롤 ID(AAA#BB)로 PUUID를 조회해 내전러에 연결합니다.")]
+    public async Task LinkPuuid(
+        [Summary("대상", "내전러 이름")] string 대상,
+        [Summary("롤닉네임", "Riot ID를 'AAA#BB' 형식으로 입력")] string 롤닉네임)
+    {
+        await DeferAsync(ephemeral: true);
+
+        var player = Find(대상);
+        if (player is null)
+        {
+            await FollowupAsync($"⚠️ '{대상}' 내전러를 찾을 수 없습니다.", ephemeral: true);
+            return;
+        }
+
+        // '내전러추가'와 동일한 조회 로직 재사용.
+        var (account, puuidNote) = await ResolveAccountAsync(롤닉네임);
+        if (account is null)
+        {
+            // 조회 실패 시 기존 PUUID/닉네임을 덮어쓰지 않는다.
+            await FollowupAsync($"⚠️ PUUID를 연결하지 못했습니다.{puuidNote}", ephemeral: true);
+            return;
+        }
+
+        player.Puuid = account.Puuid;
+        player.LolNickname = account.RiotId;
+        try
+        {
+            _players.Update(player);
+            await FollowupAsync($"🔑 **{player.Name}** PUUID 연결 완료 (`{account.RiotId}`).", ephemeral: true);
+        }
+        catch (Exception ex)
+        {
+            await FollowupAsync($"⚠️ {ex.Message}", ephemeral: true);
+        }
+    }
+
+    [RequireRole("내전관리자")]
     [SlashCommand("내전러puuid조회", "[내전관리자] 내전러의 PUUID(비밀)를 조회합니다.")]
     public async Task GetPuuid([Summary("대상", "내전러 이름")] string 대상)
     {
@@ -226,12 +292,4 @@ public sealed class PlayerCommands : InteractionModuleBase<SocketInteractionCont
     /// <summary>선택된 라인들을 문자열 목록으로(중복/빈 값 제거, 서비스에서 최대 2개로 제한).</summary>
     private static List<string> Lanes(params Lane?[] lanes)
         => lanes.Where(l => l.HasValue).Select(l => l!.Value.ToString()).Distinct().ToList();
-
-    private static string LanesText(Player p)
-    {
-        var parts = new List<string>();
-        if (p.MainLanes.Count > 0) parts.Add($"주 {string.Join("/", p.MainLanes)}");
-        if (p.SubLanes.Count > 0) parts.Add($"부 {string.Join("/", p.SubLanes)}");
-        return parts.Count == 0 ? "" : " · " + string.Join(" ", parts);
-    }
 }

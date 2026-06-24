@@ -17,7 +17,7 @@ public sealed class NewronaDatabase
 }
 
 /// <summary>
-/// 맞라인 1v1 Elo 상수. 기본값은 과제 확정값(K=20, divisor=4000, B=3, 미등록 상대 기본 1300).
+/// 팀 평균 Elo 상수. 기본값은 과제 확정값(K=20, divisor=600, B=3, 미등록 상대 기본 1300).
 /// Firestore meta/eloConfig 문서로 저장되며 값만 바꿔 튜닝할 수 있다.
 /// </summary>
 public sealed class EloConfig
@@ -25,8 +25,8 @@ public sealed class EloConfig
     /// <summary>K-factor(승패 1회 최대 변동 폭).</summary>
     public int K { get; set; } = 20;
 
-    /// <summary>expected 곡선 분모(클수록 점수차에 덜 민감). 과제 확정값 4000.</summary>
-    public double Divisor { get; set; } = 4000;
+    /// <summary>expected 곡선 분모(클수록 점수차에 덜 민감). 팀 평균 Elo 방식 확정값 600.</summary>
+    public double Divisor { get; set; } = 600;
 
     /// <summary>지표 점수 가중치(지표항 추후 구현). delta += B×(2×지표−1), 기여는 ±B로 캡 예정.</summary>
     public int B { get; set; } = 3;
@@ -45,6 +45,8 @@ public sealed class PlayerRecord
     /// <summary>비밀: 라이엇 PUUID(관리자 전용, 슬래시 조회 비노출).</summary>
     public string Puuid { get; set; } = "";
     public int Score { get; set; } = 1000;
+    /// <summary>반창고: 부라인 배정으로 누적된 빚(없으면 0). 라인 기반 팀 편성 우선권.</summary>
+    public int Bandage { get; set; }
 }
 
 public sealed class MatchRecord
@@ -59,6 +61,9 @@ public sealed class MatchRecord
 
     /// <summary>이 경기로 적용된 내전러별 점수 증감(PlayerId → delta). 삭제 시 역적용해 점수 복구.</summary>
     public Dictionary<int, int> ScoreDeltas { get; set; } = new();
+
+    /// <summary>이 경기로 적용된 내전러별 반창고 증감(PlayerId → delta). 삭제 시 역적용해 반창고 복구.</summary>
+    public Dictionary<int, int> BandageDeltas { get; set; } = new();
 }
 
 public sealed class ParticipantRecord

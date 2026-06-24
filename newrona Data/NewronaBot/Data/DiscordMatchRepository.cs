@@ -25,6 +25,7 @@ public sealed class DiscordMatchRepository : IMatchRepository
                 Note = m.Note,
                 RiotMatchId = m.RiotMatchId,
                 ScoreDeltas = new Dictionary<int, int>(m.ScoreDeltas),
+                BandageDeltas = new Dictionary<int, int>(m.BandageDeltas),
                 Participants = m.Participants
                     .Select(p => new MatchPlayer
                     {
@@ -48,6 +49,11 @@ public sealed class DiscordMatchRepository : IMatchRepository
         _store.Mutate(db =>
         {
             match.Id = db.NextMatchId++;
+
+            // 반창고 정산(경기 기록 시점): 실제 플레이 라인이 주라인이면 −1, 부/오프라인이면 +1(최소 0).
+            // 실제 적용된 증감만 match.BandageDeltas에 기록해 삭제 시 역적용할 수 있게 한다.
+            match.BandageDeltas = AccrueBandages(db, match.Participants);
+
             db.Matches.Add(new MatchRecord
             {
                 Id = match.Id,
@@ -56,6 +62,7 @@ public sealed class DiscordMatchRepository : IMatchRepository
                 Note = match.Note,
                 RiotMatchId = match.RiotMatchId,
                 ScoreDeltas = new Dictionary<int, int>(match.ScoreDeltas),
+                BandageDeltas = new Dictionary<int, int>(match.BandageDeltas),
                 Participants = match.Participants
                     .Select(p => new ParticipantRecord
                     {
@@ -84,6 +91,49 @@ public sealed class DiscordMatchRepository : IMatchRepository
             var player = db.Players.FirstOrDefault(p => p.Id == playerId);
             if (player is not null) player.Score -= delta;
         }
+        // 반창고도 동일하게 역적용(최소 0 클램프 — Elo와 같은 근사 복구).
+        foreach (var (playerId, delta) in match.BandageDeltas)
+        {
+            var player = db.Players.FirstOrDefault(p => p.Id == playerId);
+            if (player is not null) player.Bandage = Math.Max(0, player.Bandage - delta);
+        }
         db.Matches.RemoveAll(m => m.Id == matchId);
     });
+
+    /// <summary>표준 teamPosition(또는 추정 라인) → 한글 라인. 비거나 알 수 없으면 빈 문자열.</summary>
+    private static string KoreanLane(string teamPosition) => (teamPosition ?? "").Trim().ToUpperInvariant() switch
+    {
+        "TOP" => "탑",
+        "JUNGLE" => "정글",
+        "MIDDLE" => "미드",
+        "BOTTOM" => "원딜",
+        "UTILITY" => "서폿",
+        _ => "",
+    };
+
+    /// <summary>
+    /// 경기 참가자들의 반창고를 정산한다(등록 내전러·라인 판별 가능자만).
+    /// 실제 플레이 라인이 주라인이면 −1, 그 외(부/오프라인)면 +1. 최소 0으로 클램프 후 실제 적용분을 반환.
+    /// </summary>
+    private static Dictionary<int, int> AccrueBandages(Persistence.NewronaDatabase db, IEnumerable<MatchPlayer> participants)
+    {
+        var deltas = new Dictionary<int, int>();
+        foreach (var mp in participants)
+        {
+            if (mp.PlayerId == 0) continue; // 미등록은 반창고 없음.
+
+            var lane = KoreanLane(mp.TeamPosition);
+            if (lane.Length == 0) continue; // 라인 정보 없으면(수동 기록 등) 정산 불가.
+
+            var rec = db.Players.FirstOrDefault(p => p.Id == mp.PlayerId);
+            if (rec is null || rec.MainLanes.Count == 0) continue; // 주라인 데이터 없으면 판별 불가.
+
+            var raw = rec.MainLanes.Contains(lane) ? -1 : +1; // 주라인이면 빚 갚음, 아니면 빚 쌓임.
+            var newVal = Math.Max(0, rec.Bandage + raw);
+            var applied = newVal - rec.Bandage;
+            rec.Bandage = newVal;
+            if (applied != 0) deltas[mp.PlayerId] = applied;
+        }
+        return deltas;
+    }
 }

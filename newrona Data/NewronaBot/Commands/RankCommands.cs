@@ -19,7 +19,7 @@ public sealed class RankCommands : InteractionModuleBase<SocketInteractionContex
     [SlashCommand("등급기준표", "점수→등급 기준표를 봅니다.")]
     public async Task Criteria()
     {
-        await RespondAsync(embed: CriteriaEmbed());
+        await RespondAsync(embed: CriteriaEmbed(), ephemeral: true);
     }
 
     [SlashCommand("서버내등급", "서버 내 내전러 등급을 봅니다.")]
@@ -28,7 +28,7 @@ public sealed class RankCommands : InteractionModuleBase<SocketInteractionContex
         var groups = _rank.Group(_players.GetPlayers());
         if (groups.Count == 0)
         {
-            await RespondAsync("표시할 내전러가 없습니다. `/내전러추가` 로 등록하세요.");
+            await RespondAsync("표시할 내전러가 없습니다. `/내전러추가` 로 등록하세요.", ephemeral: true);
             return;
         }
 
@@ -38,7 +38,7 @@ public sealed class RankCommands : InteractionModuleBase<SocketInteractionContex
             .WithDescription(string.Join("\n", lines))
             .WithColor(Color.Purple)
             .Build();
-        await RespondAsync(embed: embed);
+        await RespondAsync(embed: embed, ephemeral: true);
     }
 
     /// <summary>점수→등급 기준표 임베드(높은 등급부터, 각 등급의 최소 점수).</summary>

@@ -22,6 +22,13 @@ public class Match
     /// </summary>
     public Dictionary<int, int> ScoreDeltas { get; set; } = new();
 
+    /// <summary>
+    /// 이 경기로 적용된 내전러별 반창고 증감(PlayerId → delta). 저장 대상.
+    /// 실제 플레이 라인이 주라인이면 −1, 부/오프라인이면 +1(최소 0 클램프 후 실제 적용분 기록).
+    /// 경기 삭제 시 이 값을 역적용해 반창고를 복구한다. 라인 정보 없는(수동) 경기는 비어 있음.
+    /// </summary>
+    public Dictionary<int, int> BandageDeltas { get; set; } = new();
+
     /// <summary>점수 계산 중 발생한 경고(예: 맞라인 매칭 실패). 일시적 정보 — 저장하지 않음.</summary>
     public List<string> ScoringWarnings { get; set; } = new();
 

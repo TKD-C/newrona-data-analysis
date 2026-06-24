@@ -61,6 +61,8 @@ public sealed class RiotMatchCommands : InteractionModuleBase<SocketInteractionC
             int recorded = 0, alreadyDone = 0, notCustom = 0, notFiveByFive = 0;
             var newSummaries = new List<string>();
             var scoringWarnings = new List<string>();
+            var bandageNet = new Dictionary<string, int>(); // 이름 → 반창고 순변동(여러 경기 합산)
+            var nameById = roster.ToDictionary(p => p.Id, p => p.Name);
 
             // 후보를 먼저 모은다(이미 기록/커스텀 아님/5대5 아님은 여기서 거름).
             var candidates = new List<(string Id, DateTime PlayedAt, List<MatchPlayer> Participants, Team Winner)>();
@@ -103,6 +105,9 @@ public sealed class RiotMatchCommands : InteractionModuleBase<SocketInteractionC
                 if (newSummaries.Count < 5) newSummaries.Add($"`#{saved.Id}` {saved.Summary}");
                 foreach (var w in saved.ScoringWarnings)
                     scoringWarnings.Add($"`#{saved.Id}` {w}");
+                foreach (var (pid, delta) in saved.BandageDeltas)
+                    if (nameById.TryGetValue(pid, out var nm))
+                        bandageNet[nm] = bandageNet.GetValueOrDefault(nm) + delta;
             }
 
             var desc = $"**{player.Name}** 최근 {ids.Count}경기 확인\n" +
@@ -114,6 +119,13 @@ public sealed class RiotMatchCommands : InteractionModuleBase<SocketInteractionC
             if (scoringWarnings.Count > 0)
                 desc += "\n\n**점수 미반영 경고**\n" + string.Join("\n", scoringWarnings.Take(5))
                       + (scoringWarnings.Count > 5 ? $"\n…외 {scoringWarnings.Count - 5}건" : "");
+
+            var bandageChanges = bandageNet.Where(kv => kv.Value != 0)
+                .OrderByDescending(kv => kv.Value)
+                .Select(kv => $"{kv.Key} {(kv.Value > 0 ? "+" : "")}{kv.Value}")
+                .ToList();
+            if (bandageChanges.Count > 0)
+                desc += "\n\n:adhesive_bandage: **반창고 변동**(주라인 −1·부/오프라인 +1)\n" + string.Join(", ", bandageChanges);
 
             var embed = new EmbedBuilder()
                 .WithTitle("📥 내전 자동 기록")

@@ -68,6 +68,7 @@ public sealed class FirestoreStore : INewronaStore
                     SubLanes = GetStringList(doc, "subLanes"),
                     Puuid = GetString(doc, "puuid"),
                     Score = GetInt(doc, "score", 1000),
+                    Bandage = GetInt(doc, "bandage", 0),
                 });
             }
 
@@ -93,6 +94,11 @@ public sealed class FirestoreStore : INewronaStore
                     foreach (var (k, v) in rawDeltas)
                         if (int.TryParse(k, out var pid)) scoreDeltas[pid] = ToInt(v);
 
+                var bandageDeltas = new Dictionary<int, int>();
+                if (doc.TryGetValue<Dictionary<string, object>>("bandageDeltas", out var rawBandage) && rawBandage is not null)
+                    foreach (var (k, v) in rawBandage)
+                        if (int.TryParse(k, out var pid)) bandageDeltas[pid] = ToInt(v);
+
                 loaded.Matches.Add(new MatchRecord
                 {
                     Id = id,
@@ -102,6 +108,7 @@ public sealed class FirestoreStore : INewronaStore
                     RiotMatchId = GetString(doc, "riotMatchId"),
                     Participants = participants,
                     ScoreDeltas = scoreDeltas,
+                    BandageDeltas = bandageDeltas,
                 });
             }
 
@@ -117,13 +124,17 @@ public sealed class FirestoreStore : INewronaStore
             // Elo 상수: meta/eloConfig 문서가 있으면 사용, 없으면 기본값(첫 flush 때 기록됨).
             var elo = await _firestore.Collection(MetaCol).Document(EloConfigDoc).GetSnapshotAsync();
             if (elo.Exists)
+            {
                 loaded.Elo = new EloConfig
                 {
                     K = GetInt(elo, "k", 20),
-                    Divisor = GetDouble(elo, "divisor", 4000),
+                    Divisor = GetDouble(elo, "divisor", 600),
                     B = GetInt(elo, "b", 3),
                     DefaultUnregisteredScore = GetInt(elo, "defaultUnregisteredScore", 1300),
                 };
+                // 팀 평균 Elo 방식으로 전환하며 1v1 시절 기본값 divisor=4000을 600으로 마이그레이션(다음 flush에 반영).
+                if (loaded.Elo.Divisor == 4000) loaded.Elo.Divisor = 600;
+            }
 
             lock (_lock)
             {
@@ -208,6 +219,7 @@ public sealed class FirestoreStore : INewronaStore
                     ["subLanes"] = p.SubLanes,
                     ["puuid"] = p.Puuid,
                     ["score"] = p.Score,
+                    ["bandage"] = p.Bandage,
                 });
                 await CommitIfFull();
             }
@@ -223,6 +235,7 @@ public sealed class FirestoreStore : INewronaStore
                     ["note"] = m.Note,
                     ["riotMatchId"] = m.RiotMatchId,
                     ["scoreDeltas"] = m.ScoreDeltas.ToDictionary(kv => kv.Key.ToString(), kv => (object)kv.Value),
+                    ["bandageDeltas"] = m.BandageDeltas.ToDictionary(kv => kv.Key.ToString(), kv => (object)kv.Value),
                     ["participants"] = m.Participants
                         .Select(pr => new Dictionary<string, object>
                         {

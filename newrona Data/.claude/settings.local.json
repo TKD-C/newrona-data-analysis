@@ -10,7 +10,9 @@
       "PowerShell(try { Get-Content \"C:\\\\Users\\\\sang\\\\Documents\\\\GitHub\\\\newrona Data\\\\new rona\\\\newrona Data\\\\NewronaBot\\\\botconfig.json\" -Raw | ConvertFrom-Json -ErrorAction Stop | Out-Null; \"JSON OK\" } catch { \"JSON ERROR: $\\($_.Exception.Message\\)\" })",
       "WebSearch",
       "Bash(tasklist)",
-      "PowerShell(Get-Process *)"
+      "PowerShell(Get-Process *)",
+      "Bash(python -)",
+      "Bash(dotnet run *)"
     ]
   }
 }

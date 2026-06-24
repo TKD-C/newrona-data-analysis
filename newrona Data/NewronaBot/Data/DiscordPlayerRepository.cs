@@ -36,6 +36,7 @@ public sealed class DiscordPlayerRepository : IPlayerRepository
                 SubLanes = new List<string>(r.SubLanes),
                 Puuid = r.Puuid,
                 Score = r.Score,
+                Bandage = r.Bandage,
                 Wins = wins.GetValueOrDefault(r.Id),
                 Losses = losses.GetValueOrDefault(r.Id),
             })
@@ -58,6 +59,7 @@ public sealed class DiscordPlayerRepository : IPlayerRepository
                 SubLanes = new List<string>(player.SubLanes),
                 Puuid = player.Puuid,
                 Score = player.Score,
+                Bandage = player.Bandage,
             });
         });
         return player;
@@ -73,6 +75,7 @@ public sealed class DiscordPlayerRepository : IPlayerRepository
         rec.SubLanes = new List<string>(player.SubLanes);
         rec.Puuid = player.Puuid;
         rec.Score = player.Score;
+        rec.Bandage = player.Bandage;
     });
 
     public void Delete(int playerId) => _store.Mutate(db =>
