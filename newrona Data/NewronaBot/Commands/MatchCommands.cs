@@ -6,6 +6,7 @@ using NewronaData.Services;
 namespace NewronaBot.Commands;
 
 /// <summary>경기 기록 슬래시 명령어.</summary>
+[RequireRole("내전관리자")]
 public sealed class MatchCommands : InteractionModuleBase<SocketInteractionContext>
 {
     private static readonly char[] Separators = { ',', ' ', '\n', '\t', '/' };
@@ -83,6 +84,50 @@ public sealed class MatchCommands : InteractionModuleBase<SocketInteractionConte
         await RespondAsync($"🗑️ #{번호} 경기를 삭제했습니다.");
     }
 
+    [SlashCommand("내전기록삭제", "여러 경기 기록을 한 번에 삭제합니다(번호를 공백/쉼표로 구분, 예: 1 3 5 6).")]
+    public async Task DeleteMany([Summary("번호들", "삭제할 경기 # 번호들 (예: 1 3 5 6)")] string 번호들)
+    {
+        // 입력을 정수 번호로 파싱(중복 제거). 정수가 아닌 토큰은 무시 목록에 모음.
+        var tokens = 번호들.Split(Separators, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var ids = new List<int>();
+        var invalid = new List<string>();
+        foreach (var tok in tokens)
+        {
+            if (int.TryParse(tok, out var id)) ids.Add(id);
+            else invalid.Add(tok);
+        }
+        ids = ids.Distinct().ToList();
+
+        if (ids.Count == 0)
+        {
+            await RespondAsync("⚠️ 삭제할 번호가 없습니다. 예: `/내전기록삭제 1 3 5 6`", ephemeral: true);
+            return;
+        }
+
+        var existing = _matches.GetMatches().Select(m => m.Id).ToHashSet();
+        var deleted = new List<int>();
+        var notFound = new List<int>();
+        foreach (var id in ids)
+        {
+            if (existing.Contains(id))
+            {
+                _matches.Delete(id);
+                deleted.Add(id);
+            }
+            else notFound.Add(id);
+        }
+
+        var sb = new System.Text.StringBuilder();
+        if (deleted.Count > 0)
+            sb.AppendLine($"🗑️ 삭제: {string.Join(", ", deleted.OrderBy(x => x).Select(x => $"#{x}"))}");
+        if (notFound.Count > 0)
+            sb.AppendLine($"❓ 없음: {string.Join(", ", notFound.OrderBy(x => x).Select(x => $"#{x}"))}");
+        if (invalid.Count > 0)
+            sb.AppendLine($"⚠️ 무시(숫자 아님): {string.Join(", ", invalid)}");
+
+        await RespondAsync(sb.ToString().TrimEnd());
+    }
+
     /// <summary>입력 문자열을 플레이어 이름으로 분리해 ID로 변환. 미등록 이름이 있으면 예외.</summary>
     private static List<int> Resolve(string raw, IReadOnlyList<Player> roster)
     {
@@ -98,7 +143,7 @@ public sealed class MatchCommands : InteractionModuleBase<SocketInteractionConte
         }
 
         if (missing.Count > 0)
-            throw new InvalidOperationException($"등록되지 않은 플레이어: {string.Join(", ", missing)} — 먼저 /플레이어추가 로 등록하세요.");
+            throw new InvalidOperationException($"등록되지 않은 내전러: {string.Join(", ", missing)} — 먼저 /내전러추가 로 등록하세요.");
 
         return ids;
     }

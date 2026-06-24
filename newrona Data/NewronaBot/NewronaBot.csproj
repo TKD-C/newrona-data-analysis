@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="Discord.Net" Version="3.17.4" />
+    <PackageReference Include="Google.Cloud.Firestore" Version="3.10.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
   </ItemGroup>
 
@@ -34,6 +35,7 @@
   <ItemGroup>
     <None Update="botconfig.example.json" CopyToOutputDirectory="PreserveNewest" />
     <None Update="botconfig.json" CopyToOutputDirectory="PreserveNewest" Condition="Exists('botconfig.json')" />
+    <None Update="firebase-key.json" CopyToOutputDirectory="PreserveNewest" Condition="Exists('firebase-key.json')" />
   </ItemGroup>
 
 </Project>

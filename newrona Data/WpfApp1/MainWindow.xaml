@@ -5,7 +5,7 @@
         Title="뉴로나 내전 기록기" Height="640" Width="1000"
         FontFamily="Malgun Gothic" FontSize="13">
     <TabControl Margin="6">
-        <TabItem Header="플레이어">
+        <TabItem Header="내전러">
             <views:PlayerView DataContext="{Binding Players}" />
         </TabItem>
         <TabItem Header="경기 기록">

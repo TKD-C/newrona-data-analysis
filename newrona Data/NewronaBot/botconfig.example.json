@@ -1,5 +1,8 @@
 {
   "token": "여기에-디스코드-봇-토큰",
   "guildId": "여기에-서버(길드)-ID",
-  "channelId": "여기에-데이터-저장-전용-채널-ID"
+  "firebaseProjectId": "여기에-Firebase-프로젝트-ID",
+  "firebaseKeyPath": "firebase-key.json",
+  "riotApiKey": "여기에-라이엇-API-키(선택)",
+  "riotRegion": "asia"
 }

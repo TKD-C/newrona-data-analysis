@@ -5,14 +5,14 @@ using NewronaData.Models;
 namespace NewronaBot.Data;
 
 /// <summary>
-/// 디스코드 채널 JSON 저장소 기반 플레이어 저장소.
+/// <see cref="INewronaStore"/>(디스코드 채널/파이어스토어 등) 기반 플레이어 저장소.
 /// 기존 SQLite 구현과 동일한 계약(IPlayerRepository)을 만족하므로 서비스 계층은 그대로 재사용된다.
 /// 승/패 통계는 (예전 SQL JOIN처럼) 경기 데이터로부터 메모리에서 집계한다.
 /// </summary>
 public sealed class DiscordPlayerRepository : IPlayerRepository
 {
-    private readonly DiscordJsonStore _store;
-    public DiscordPlayerRepository(DiscordJsonStore store) => _store = store;
+    private readonly INewronaStore _store;
+    public DiscordPlayerRepository(INewronaStore store) => _store = store;
 
     public IReadOnlyList<Player> GetAll() => _store.Read(db =>
     {
@@ -32,7 +32,9 @@ public sealed class DiscordPlayerRepository : IPlayerRepository
                 Id = r.Id,
                 Name = r.Name,
                 LolNickname = r.LolNickname,
-                LolTier = r.LolTier,
+                MainLanes = new List<string>(r.MainLanes),
+                SubLanes = new List<string>(r.SubLanes),
+                Puuid = r.Puuid,
                 Score = r.Score,
                 Wins = wins.GetValueOrDefault(r.Id),
                 Losses = losses.GetValueOrDefault(r.Id),
@@ -52,7 +54,9 @@ public sealed class DiscordPlayerRepository : IPlayerRepository
                 Id = player.Id,
                 Name = player.Name,
                 LolNickname = player.LolNickname,
-                LolTier = player.LolTier,
+                MainLanes = new List<string>(player.MainLanes),
+                SubLanes = new List<string>(player.SubLanes),
+                Puuid = player.Puuid,
                 Score = player.Score,
             });
         });
@@ -65,7 +69,9 @@ public sealed class DiscordPlayerRepository : IPlayerRepository
         if (rec is null) return;
         rec.Name = player.Name;
         rec.LolNickname = player.LolNickname;
-        rec.LolTier = player.LolTier;
+        rec.MainLanes = new List<string>(player.MainLanes);
+        rec.SubLanes = new List<string>(player.SubLanes);
+        rec.Puuid = player.Puuid;
         rec.Score = player.Score;
     });
 

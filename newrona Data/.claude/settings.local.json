@@ -4,7 +4,13 @@
       "PowerShell(Get-ChildItem \"C:\\\\Users\\\\sang\\\\Documents\\\\GitHub\\\\newrona Data\\\\newrona Data\" -Force | Select-Object Name; \"DOTNET:\"; \\(Get-Command dotnet -ErrorAction SilentlyContinue\\).Source)",
       "PowerShell(dotnet build *)",
       "Bash(dotnet sln *)",
-      "Bash(dotnet build *)"
+      "Bash(dotnet build *)",
+      "Bash(git check-ignore *)",
+      "PowerShell(dotnet run *)",
+      "PowerShell(try { Get-Content \"C:\\\\Users\\\\sang\\\\Documents\\\\GitHub\\\\newrona Data\\\\new rona\\\\newrona Data\\\\NewronaBot\\\\botconfig.json\" -Raw | ConvertFrom-Json -ErrorAction Stop | Out-Null; \"JSON OK\" } catch { \"JSON ERROR: $\\($_.Exception.Message\\)\" })",
+      "WebSearch",
+      "Bash(tasklist)",
+      "PowerShell(Get-Process *)"
     ]
   }
 }

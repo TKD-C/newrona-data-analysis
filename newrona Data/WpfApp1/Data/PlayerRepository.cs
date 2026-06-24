@@ -14,7 +14,7 @@ public sealed class PlayerRepository : IPlayerRepository
         using var cmd = conn.CreateCommand();
         // 승/패 통계를 LEFT JOIN으로 함께 집계
         cmd.CommandText = """
-            SELECT p.Id, p.Name, p.LolNickname, p.LolTier, p.Score,
+            SELECT p.Id, p.Name, p.LolNickname, p.MainLane, p.SubLane, p.Puuid, p.Score,
                    COALESCE(SUM(CASE WHEN mp.Team = m.Winner THEN 1 ELSE 0 END), 0) AS Wins,
                    COALESCE(SUM(CASE WHEN mp.Team <> m.Winner THEN 1 ELSE 0 END), 0) AS Losses
             FROM Players p
@@ -31,10 +31,12 @@ public sealed class PlayerRepository : IPlayerRepository
                 Id = r.GetInt32(0),
                 Name = r.GetString(1),
                 LolNickname = r.GetString(2),
-                LolTier = r.GetString(3),
-                Score = r.GetInt32(4),
-                Wins = r.GetInt32(5),
-                Losses = r.GetInt32(6),
+                MainLanes = SplitLanes(r.GetString(3)),
+                SubLanes = SplitLanes(r.GetString(4)),
+                Puuid = r.GetString(5),
+                Score = r.GetInt32(6),
+                Wins = r.GetInt32(7),
+                Losses = r.GetInt32(8),
             });
         return list;
     }
@@ -44,8 +46,8 @@ public sealed class PlayerRepository : IPlayerRepository
         using var conn = _factory.Create();
         using var cmd = conn.CreateCommand();
         cmd.CommandText = """
-            INSERT INTO Players (Name, LolNickname, LolTier, Score)
-            VALUES ($n, $k, $t, $s);
+            INSERT INTO Players (Name, LolNickname, MainLane, SubLane, Puuid, Score)
+            VALUES ($n, $k, $ml, $sl, $pu, $s);
             SELECT last_insert_rowid();
             """;
         Bind(cmd, p);
@@ -58,7 +60,7 @@ public sealed class PlayerRepository : IPlayerRepository
         using var conn = _factory.Create();
         using var cmd = conn.CreateCommand();
         cmd.CommandText = """
-            UPDATE Players SET Name=$n, LolNickname=$k, LolTier=$t, Score=$s WHERE Id=$id;
+            UPDATE Players SET Name=$n, LolNickname=$k, MainLane=$ml, SubLane=$sl, Puuid=$pu, Score=$s WHERE Id=$id;
             """;
         Bind(cmd, p);
         cmd.Parameters.AddWithValue("$id", p.Id);
@@ -78,7 +80,12 @@ public sealed class PlayerRepository : IPlayerRepository
     {
         cmd.Parameters.AddWithValue("$n", p.Name);
         cmd.Parameters.AddWithValue("$k", p.LolNickname);
-        cmd.Parameters.AddWithValue("$t", p.LolTier);
+        cmd.Parameters.AddWithValue("$ml", string.Join(",", p.MainLanes));
+        cmd.Parameters.AddWithValue("$sl", string.Join(",", p.SubLanes));
+        cmd.Parameters.AddWithValue("$pu", p.Puuid);
         cmd.Parameters.AddWithValue("$s", p.Score);
     }
+
+    private static List<string> SplitLanes(string raw)
+        => raw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
 }

@@ -12,21 +12,23 @@ public sealed class RankService : IRankService
     /// <summary>과제 기본 등급표.</summary>
     public static readonly IReadOnlyList<ServerRank> Default = new[]
     {
-        new ServerRank("OP",     200),
-        new ServerRank("★★★",  190),
-        new ServerRank("★★",    180),
-        new ServerRank("★",      170),
-        new ServerRank("칼칼칼", 160),
-        new ServerRank("칼칼",   150),
-        new ServerRank("칼",     140),
-        new ServerRank("번번번", 130),
-        new ServerRank("번번",   120),
-        new ServerRank("번",     110),
-        new ServerRank("고양이", 100),
+        new ServerRank(":dragon_face:",                                   2000),
+        new ServerRank(":star::star::star:",                              1900),
+        new ServerRank(":star::star:",                                    1800),
+        new ServerRank(":star:",                                          1700),
+        new ServerRank(":crossed_swords::crossed_swords::crossed_swords:", 1600),
+        new ServerRank(":crossed_swords::crossed_swords:",                1500),
+        new ServerRank(":crossed_swords:",                                1400),
+        new ServerRank(":zap::zap::zap:",                                 1300),
+        new ServerRank(":zap::zap:",                                      1200),
+        new ServerRank(":zap:",                                           1100),
+        new ServerRank(":cat:",                                           1000),
     };
 
     public RankService(IReadOnlyList<ServerRank>? ranks = null)
         => _ranks = (ranks ?? Default).OrderByDescending(r => r.MinScore).ToList();
+
+    public IReadOnlyList<ServerRank> Ranks => _ranks;
 
     public ServerRank Resolve(int score)
         => _ranks.FirstOrDefault(r => score >= r.MinScore) ?? _ranks[^1];

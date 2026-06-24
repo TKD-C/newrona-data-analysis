@@ -7,7 +7,7 @@
             <ColumnDefinition Width="260" />
         </Grid.ColumnDefinitions>
 
-        <!-- 플레이어 목록 -->
+        <!-- 내전러 목록 -->
         <DataGrid Grid.Column="0" Margin="0,0,8,0"
                   ItemsSource="{Binding Players}"
                   SelectedItem="{Binding SelectedPlayer}"
@@ -16,7 +16,8 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="이름" Binding="{Binding Name}" Width="*" />
                 <DataGridTextColumn Header="롤 닉네임" Binding="{Binding LolNickname}" Width="*" />
-                <DataGridTextColumn Header="롤 티어" Binding="{Binding LolTier}" Width="*" />
+                <DataGridTextColumn Header="주 라인" Binding="{Binding MainLanesText}" Width="*" />
+                <DataGridTextColumn Header="부 라인" Binding="{Binding SubLanesText}" Width="*" />
                 <DataGridTextColumn Header="점수" Binding="{Binding Score}" Width="60" />
                 <DataGridTextColumn Header="승" Binding="{Binding Wins}" Width="45" />
                 <DataGridTextColumn Header="패" Binding="{Binding Losses}" Width="45" />
@@ -26,13 +27,11 @@
 
         <!-- 입력 폼 -->
         <StackPanel Grid.Column="1">
-            <TextBlock Text="플레이어 정보" FontWeight="Bold" Margin="0,0,0,6" />
+            <TextBlock Text="내전러 정보" FontWeight="Bold" Margin="0,0,0,6" />
             <TextBlock Text="이름 *" />
             <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,6" />
             <TextBlock Text="롤 닉네임" />
             <TextBox Text="{Binding Nickname, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,6" />
-            <TextBlock Text="롤 티어" />
-            <TextBox Text="{Binding Tier, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,6" />
             <TextBlock Text="점수" />
             <TextBox Text="{Binding Score, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,2" />
             <TextBlock Margin="0,0,0,10" Foreground="DarkSlateBlue">

@@ -9,7 +9,21 @@ public class Match
     public DateTime PlayedAt { get; set; } = DateTime.Now;
     public Team Winner { get; set; } = Team.Team1;
     public string Note { get; set; } = "";
+
+    /// <summary>라이엇 match-v5 경기 ID. 수동 기록은 빈 문자열, 자동 기록(내전기록하기)은 채워짐 → 중복 기록 방지 키.</summary>
+    public string RiotMatchId { get; set; } = "";
+
     public List<MatchPlayer> Participants { get; set; } = new();
+
+    /// <summary>
+    /// 이 경기로 적용된 내전러별 점수 증감(PlayerId → delta). 저장 대상.
+    /// 경기 삭제 시 이 값을 역적용해 점수를 복구한다(Elo 멱등성 방식 (a)).
+    /// 점수 미반영(NoOp/수동/라인 매칭 실패) 경기는 비어 있음.
+    /// </summary>
+    public Dictionary<int, int> ScoreDeltas { get; set; } = new();
+
+    /// <summary>점수 계산 중 발생한 경고(예: 맞라인 매칭 실패). 일시적 정보 — 저장하지 않음.</summary>
+    public List<string> ScoringWarnings { get; set; } = new();
 
     private string Names(Team team)
         => string.Join(", ", Participants.Where(p => p.Team == team).Select(p => p.PlayerName));
@@ -25,8 +39,22 @@ public class Match
 public class MatchPlayer
 {
     public int MatchId { get; set; }
+
+    /// <summary>등록된 내전러의 ID. 미등록 참가자(자동 기록 시)는 0.</summary>
     public int PlayerId { get; set; }
     public Team Team { get; set; }
+
+    /// <summary>라인(탑/정글/미드/원딜/서폿). 자동 기록 시 채워짐, 수동 기록은 빈 문자열.</summary>
+    public string Lane { get; set; } = "";
+
+    /// <summary>
+    /// 라이엇 raw teamPosition(TOP/JUNGLE/MIDDLE/BOTTOM/UTILITY). 자동 기록 시 채워짐.
+    /// Elo 맞라인 1v1 매칭에 사용 — 정상 5v5는 전원 정확히 채워지므로 <see cref="Lane"/>(추정값)보다 신뢰.
+    /// </summary>
+    public string TeamPosition { get; set; } = "";
+
+    /// <summary>라이엇 PUUID(자동 기록 시 매칭/표시용). 비밀 정보이므로 외부 노출 금지.</summary>
+    public string Puuid { get; set; } = "";
 
     // 조회 편의용
     public string PlayerName { get; set; } = "";

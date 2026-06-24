@@ -1,0 +1,30 @@
+# ===== 비밀 설정 (절대 커밋 금지) =====
+botconfig.json
+secrets.json
+appsettings.*.Local.json
+*.secret
+*.key
+.env
+
+# Firebase 서비스 계정 키 (절대 커밋 금지)
+firebase-key.json
+*-firebase-adminsdk-*.json
+serviceAccountKey.json
+
+# ===== .NET 빌드 산출물 =====
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+
+# ===== 데이터/런타임 파일 =====
+*.db
+*.db-shm
+*.db-wal
+newrona-data.json
+
+# ===== IDE / 기타 =====
+.vs/
+.idea/
+*.suo

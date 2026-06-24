@@ -41,7 +41,6 @@ public sealed class PlayerListViewModel : ViewModelBase
             {
                 Name = value.Name;
                 Nickname = value.LolNickname;
-                Tier = value.LolTier;
                 Score = value.Score;
             }
         }
@@ -53,10 +52,7 @@ public sealed class PlayerListViewModel : ViewModelBase
     private string _nickname = "";
     public string Nickname { get => _nickname; set => SetProperty(ref _nickname, value); }
 
-    private string _tier = "";
-    public string Tier { get => _tier; set => SetProperty(ref _tier, value); }
-
-    private int _score = 100;
+    private int _score = 1000;
     public int Score { get => _score; set { if (SetProperty(ref _score, value)) OnPropertyChanged(nameof(RankPreview)); } }
 
     public string RankPreview => _rank.Resolve(_score).Name;
@@ -71,7 +67,7 @@ public sealed class PlayerListViewModel : ViewModelBase
     {
         try
         {
-            _service.Create(Name, Nickname, Tier, Score);
+            _service.Create(Name, Nickname, Score);
             ClearForm();
             Refresh();
             Changed?.Invoke();
@@ -86,7 +82,6 @@ public sealed class PlayerListViewModel : ViewModelBase
         {
             SelectedPlayer.Name = Name;
             SelectedPlayer.LolNickname = Nickname;
-            SelectedPlayer.LolTier = Tier;
             SelectedPlayer.Score = Score;
             _service.Update(SelectedPlayer);
             Refresh();
@@ -107,8 +102,8 @@ public sealed class PlayerListViewModel : ViewModelBase
     private void ClearForm()
     {
         SelectedPlayer = null;
-        Name = Nickname = Tier = "";
-        Score = 100;
+        Name = Nickname = "";
+        Score = 1000;
         OnPropertyChanged(nameof(RankPreview));
     }
 

@@ -15,7 +15,7 @@ namespace NewronaBot.Persistence;
 ///
 /// 메시지 텍스트(2000자) 제한을 피하려고 파일 첨부 방식을 쓴다(경기 수백 건도 안전).
 /// </summary>
-public sealed class DiscordJsonStore
+public sealed class DiscordJsonStore : INewronaStore
 {
     private const string FileName = "newrona-data.json";
     private const string HeaderText =
